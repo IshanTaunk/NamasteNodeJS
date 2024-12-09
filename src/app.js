@@ -1,22 +1,33 @@
-// const http = require("http");
-// console.log("Hello");
-// const server = http.createServer(function(req,res){
-//     if(req.url==="/getSecret"){
-//         res.end("No secret");
-//     }
-//     res.end("Hello World")
-// });
-
-// server.listen(7777);
-
 const express = require("express");
-
+const connectDB = require("./config/database");
 const app = express();
+const User = require("./models/user");
 
-app.use((req,res)=>{
-    res.send("Hello from the server side");
+app.post("/signup", async(req,res) => {
+
+    const user = new User({
+        firstName: "virat",
+        lastName: "kohli",
+        email: "ishan.taunk444@gmail.com",
+        password: "password",
+        age: 30,
+        gender: "M"
+    })
+
+    try{
+        await user.save();
+        res.send("User added successfully");
+    }catch(err){
+        res.send("Error creating User: "+ err.message);
+    }
 })
 
-app.listen(3000,()=>{
-    console.log("Server is listening");
-});
+connectDB()
+    .then(()=>{
+        console.log("db connection made");
+        app.listen(3000,()=>{
+            console.log("Server is listening");
+        });
+    }).catch(err=>{
+        console.log("db connection not made");
+    });
