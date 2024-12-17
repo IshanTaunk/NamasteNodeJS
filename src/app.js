@@ -5,18 +5,24 @@ const User = require("./models/user");
 
 app.use(express.json());
 
-app.patch("/user", async(req,res)=>{
-    const userEmail = req.body.emailId;
+app.patch("/user/:userId", async(req,res)=>{
+    const userId = req.params?.userId;
     console.log(req.body);
+    const ALLOWED_UPDATES = ["gender","age","about","skills"];
+    const isUpdateAllowed = Object.keys(req.body).every(k=>ALLOWED_UPDATES.includes(k));
+
     try{
-        const user = await User.findOneAndUpdate({emailId:userEmail},req.body,{returnDocument:'after'});
+        if(!isUpdateAllowed){
+            throw new Error("THis update is not allowed!");
+        }
+        const user = await User.findOneAndUpdate({_id: userId},req.body,{returnDocument: 'after',runValidators: true});
         if(user){
             res.send(user);
         }else{
             res.status(404).send("User not found");
         }
     }catch(err){
-        res.status(400).send("Something went wrong");
+        res.status(400).send("Update Failed: "+ err.message);
     }
 })
 
