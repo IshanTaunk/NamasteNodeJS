@@ -5,11 +5,12 @@ const userSchema = new mongoose.Schema({
     firstName: {
         type: String,
         required: true,
-        minLength: 4,
+        minLength: 1,
         maxLength: 50
     },
     lastName: {
         type: String,
+        required: true,
     },
     emailId: {
         type: String,
@@ -18,11 +19,6 @@ const userSchema = new mongoose.Schema({
         index: true,
         trim: true,
         lowercase: true,
-        validate(value){
-            if(!validator.isEmail(value)){
-                throw new Error("Not a valid Email Id: "+ value);
-            }
-        }
     },
     password: {
         type: String,
