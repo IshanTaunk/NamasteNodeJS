@@ -5,7 +5,8 @@ const User = require("./models/user");
 const {validateSignUpData, validateLoginData} = require('./utils/validation');
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
-const jwt = require("jsonwebtoken");
+
+const {userAuth} = require("./middleware/auth");
 
 app.use(express.json());
 app.use(cookieParser());
@@ -83,13 +84,11 @@ app.post("/login", async(req,res) => {
         }
 
         //compare password
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-
-        //create jwt
-        const token = await jwt.sign({_id:user._id},"Dev4Tinder@");
+        const isPasswordValid = await user.comparePwd(password);
 
         if(isPasswordValid){
-            res.cookie("token",token);
+            const token = await user.getJWT();
+            res.cookie("token",token,{ expires: new Date(Date.now() + 7*3600000)});
             res.send("User logged in successfully");
         }else{
             throw new Error("Invalid credentials!");
@@ -99,26 +98,9 @@ app.post("/login", async(req,res) => {
     }
 })
 
-app.get("/profile", async(req,res) => {
+app.get("/profile", userAuth, async(req,res) => {
     try{
-        console.log(req.cookies);
-        const cookies = req.cookies;
-        if(!cookies){
-            throw new Error("Login failed, please try again.");
-        }
-        const {token} = cookies;
-        if(!token){
-            throw new Error("Login failed, Invalid token.");
-        }
-
-        //Validate my token
-        const {_id} = await jwt.verify(token,"Dev4Tinder@");
-        
-        const profile = await User.findById({_id:_id});
-        if(!profile){
-            throw new Error("No such user exists!");
-        }
-
+        const profile = req.user;
         res.send(profile);
     }catch(err){
         res.send("Error getting profile in: "+ err.message);
