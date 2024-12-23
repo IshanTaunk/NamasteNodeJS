@@ -36,3 +36,6 @@ module.exports = {userAuth};
 
 // "emailId" : "mark@gmail.com",
 //     "password" : "Mark@123Zuck",
+
+// "emailId" : "mahi@gmail.com",
+//     "password" : "Mahi@123",
