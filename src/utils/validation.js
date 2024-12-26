@@ -12,6 +12,14 @@ const validateSignUpData=(req)=>{
     }
 }
 
+const validatePwd=(password)=>{
+    if(!validator.isLength(password,{ min: 4, max: 15 })){
+        throw new Error('Password length is not correct!');
+    }else if(!validator.isStrongPassword(password)){
+        throw new Error('Password is not strong!');
+    }
+}
+
 const validateLoginData=(req)=>{
     const {emailId, password} = req.body;
 
@@ -20,7 +28,16 @@ const validateLoginData=(req)=>{
     }
 }
 
+const validateProfileEditData=(req)=>{
+    //ToDo: Also validate if photourl is valid while updating.
+    const ALLOWED_UPDATES = ["gender","age","about","skills"];
+    const isUpdateAllowed = Object.keys(req.body).every(k=>ALLOWED_UPDATES.includes(k));
+    return isUpdateAllowed;
+}
+
 module.exports = {
     validateSignUpData,
-    validateLoginData
+    validateLoginData,
+    validateProfileEditData,
+    validatePwd
 }

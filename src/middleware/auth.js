@@ -9,7 +9,7 @@ const userAuth = async(req,res,next) =>{
         }
         const {token} = cookies;
         if(!token){
-            throw new Error("Login failed, Invalid token.");
+            throw new Error("Token expired. Please login again!");
         }
         //Validate my token
         const {_id} = await jwt.verify(token,"Dev4Tinder@");
@@ -38,4 +38,4 @@ module.exports = {userAuth};
 //     "password" : "Mark@123Zuck",
 
 // "emailId" : "mahi@gmail.com",
-//     "password" : "Mahi@123",
+//     "password" : "Dhoni@123",
