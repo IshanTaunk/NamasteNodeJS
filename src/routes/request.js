@@ -40,47 +40,51 @@ requestRouter.post("/request/send/:status/:toUserId", userAuth, async(req,res)=>
         });
         const data = await newConnection.save();
         res.json({
-            message : "New connection request status is now "+status+"!",
+            message : "An "+status+` request from ${req.user.firstName} to ${toUser.firstName}!`,
             data
         });
     }catch(err){
         res.status(400).send("Sending request failed: "+ err.message);
     }
-})
+});
 
-requestRouter.patch("/user/:userId", async(req,res)=>{
-    const userId = req.params?.userId;
-    console.log(req.body);
-    const ALLOWED_UPDATES = ["gender","age","about","skills"];
-    const isUpdateAllowed = Object.keys(req.body).every(k=>ALLOWED_UPDATES.includes(k));
-
+requestRouter.post("/request/review/:status/:fromUserId", userAuth, async(req,res)=>{
     try{
-        if(!isUpdateAllowed){
-            throw new Error("THis update is not allowed!");
+        const toUserId = req.user._id;
+        const {status,fromUserId} = req.params;
+
+        //Validate type of connection request
+        const allowedConnectionTypes = ["accepted","rejected"];
+        if(!allowedConnectionTypes.includes(status)){
+            throw new Error("This type of connection request is not allowed!");
         }
-        const user = await User.findOneAndUpdate({_id: userId},req.body,{returnDocument: 'after',runValidators: true});
-        if(user){
-            res.send(user);
-        }else{
-            res.status(404).send("User not found");
+
+        //Validate if reciever exists in database
+        const fromUser = await User.findOne({_id : fromUserId});
+        if(!fromUser){
+            throw new Error("This sender does not exists!");
         }
+
+        //Validate if connection exists and status is interested.
+        const existingConnectionRequest = await ConnectionRequest.findOne({
+            status: "interested",
+            fromUserId,
+            toUserId
+        });
+        if(!existingConnectionRequest){
+            throw new Error("This connection request does not exists!");
+        }
+
+        existingConnectionRequest.status = status;
+
+        const data = await existingConnectionRequest.save();
+        res.json({
+            message : `The connection request by ${fromUser.firstName} is `+status+` by ${req.user.firstName}!`,
+            data
+        });
     }catch(err){
-        res.status(400).send("Update Failed: "+ err.message);
+        res.status(400).send("Request handling failed: "+ err.message);
     }
-})
-
-requestRouter.get("/user", async(req,res)=>{
-    const userEmail = req.body.emailId;
-    try{
-        const users = await User.find({});
-        if(users.length===0){
-            res.status(404).send("User not found!");
-        }else{
-            res.send(users);
-        }
-    } catch(err){
-        res.status(400).send("Something went wrong");
-    }
-})
+});
 
 module.exports = requestRouter;
